@@ -1,0 +1,62 @@
+{
+  "name": "deploydoctor",
+  "version": "1.0.0",
+  "description": "A developer-focused debugging assistant for React applications",
+  "type": "module",
+  "bin": {
+    "deploydoctor": "./dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc && npm run build:dashboard",
+    "build:dashboard": "cd src/dashboard && vite build",
+    "dev": "tsc --watch",
+    "dev:dashboard": "cd src/dashboard && vite",
+    "dev:server": "node --loader ts-node/esm src/server/index.ts",
+    "start": "node dist/server/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --ext .ts,.tsx",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "react",
+    "debugging",
+    "monitoring",
+    "white-screen",
+    "error-tracking"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.0",
+    "ora": "^8.0.1",
+    "playwright": "^1.44.0",
+    "source-map": "^0.7.4"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.12.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^7.7.0",
+    "@typescript-eslint/parser": "^7.7.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^8.57.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "react-router-dom": "^6.23.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.10",
+    "vitest": "^1.5.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Failure Test</title>
+</head>
+<body>
+  <div id="root">
+    <h1>Loading data...</h1>
+  </div>
+  <script type="module">
+    // Attempt to fetch from nonexistent API
+    async function loadData() {
+      try {
+        const response = await fetch('http://localhost:9999/api/nonexistent');
+        const data = await response.json();
+        document.getElementById('root').innerHTML = `<h1>Data: ${data.name}</h1>`;
+      } catch (error) {
+        document.getElementById('root').innerHTML = `<h1>Failed to load data</h1>`;
+      }
+    }
+    
+    loadData();
+  </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Undefined Crash Test</title>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module">
+    // Simulate React app with undefined property access
+    const data = null;
+    
+    function render() {
+      // This will crash: Cannot read property 'name' of null
+      document.getElementById('root').innerHTML = `<h1>${data.name}</h1>`;
+    }
+    
+    render();
+  </script>
+</body>
+</html>

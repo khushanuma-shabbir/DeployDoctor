@@ -1,0 +1,99 @@
+.help {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+
+.help-header {
+  margin-bottom: 32px;
+}
+
+.help-header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.help-section {
+  margin-bottom: 24px;
+}
+
+.help-section h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.help-section p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.help-section ul {
+  margin-left: 24px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.help-section li {
+  margin-bottom: 8px;
+}
+
+.issue-explanation {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.issue-explanation:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.issue-explanation h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent-blue);
+  margin-bottom: 12px;
+}
+
+.issue-explanation p {
+  margin-bottom: 8px;
+}
+
+.issue-explanation strong {
+  color: var(--text-primary);
+}
+
+.issue-explanation ul {
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+
+.cli-example {
+  background: var(--bg-tertiary);
+  padding: 16px;
+  border-radius: var(--border-radius);
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--accent-cyan);
+  margin-top: 12px;
+}
+
+.faq-item {
+  margin-bottom: 20px;
+}
+
+.faq-item h4 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.faq-item p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
