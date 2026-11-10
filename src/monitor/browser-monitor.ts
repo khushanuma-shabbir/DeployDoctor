@@ -1,5 +1,6 @@
 import { chromium, Browser, Page, ConsoleMessage, Request, Response } from 'playwright';
 import type { BrowserError, NetworkRequest, PageState, ScanOptions } from '../types/index.js';
+import { setupPlaywrightSSRFProtection } from '../middleware/ssrf-protection.js';
 
 export interface MonitorResult {
   pageState: PageState;
@@ -40,6 +41,9 @@ export class BrowserMonitor {
     });
     
     this.page = await context.newPage();
+    
+    // Set up SSRF protection BEFORE any navigation
+    await setupPlaywrightSSRFProtection(this.page, options.url, options.mode);
     
     // Set up error listeners
     this.setupErrorListeners();

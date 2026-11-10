@@ -1,5 +1,6 @@
 import { chromium, firefox, webkit, Browser, BrowserContext, Page, ConsoleMessage } from 'playwright';
 import type { QAAgentOptions, BrowserError, NetworkRequest } from '../types/index.js';
+import { setupPlaywrightSSRFProtection } from '../middleware/ssrf-protection.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -25,6 +26,8 @@ export class QABrowserAgent {
   
   private screenshotDir: string = 'reports/qa-screenshots';
   private currentUrl: string = '';
+  private currentMode: 'local' | 'production' = 'production';
+  private ssrfProtectionEnabled: boolean = false;
   
   /**
    * Initialize the browser
@@ -61,6 +64,9 @@ export class QABrowserAgent {
     // Create page
     this.page = await this.context.newPage();
     
+    // Store mode for SSRF protection
+    this.currentMode = options.mode;
+    
     // Set up listeners
     this.setupErrorListeners();
     this.setupNetworkListeners();
@@ -73,6 +79,12 @@ export class QABrowserAgent {
     if (!this.page) throw new Error('Browser not initialized');
     
     this.currentUrl = url;
+    
+    // Set up SSRF protection on first navigation
+    if (!this.ssrfProtectionEnabled) {
+      await setupPlaywrightSSRFProtection(this.page, url, this.currentMode);
+      this.ssrfProtectionEnabled = true;
+    }
     
     try {
       await this.page.goto(url, {

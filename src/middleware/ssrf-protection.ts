@@ -2,6 +2,7 @@ import { parse as parseUrl } from 'url';
 import { isIP } from 'net';
 import ipaddr from 'ipaddr.js';
 import dns from 'dns/promises';
+import type { Page, Route } from 'playwright';
 
 /**
  * Comprehensive SSRF Protection
@@ -12,19 +13,25 @@ import dns from 'dns/promises';
  * - Link-local (169.254.x, fe80::)
  * - Cloud metadata endpoints
  * - Internal network services
+ * - Post-load navigation to blocked URLs
+ * - Redirects to internal addresses
  */
 
 const BLOCKED_DOMAINS = [
   'metadata.google.internal',
   'metadata.azure.com',
   'metadata',
-  'localhost'
+  'localhost',
+  '169.254.169.254', // Explicit IP blocking
+  '0.0.0.0'
 ];
 
 const CLOUD_METADATA_IPS = [
   '169.254.169.254', // AWS, Azure, GCP
   '169.254.169.253', // AWS
-  'fd00:ec2::254'    // AWS IPv6
+  'fd00:ec2::254',   // AWS IPv6
+  '169.254.170.2',   // ECS task metadata
+  '100.100.100.200'  // Alibaba Cloud
 ];
 
 export async function validateUrl(url: string, mode: 'local' | 'production'): Promise<{ valid: boolean; error?: string }> {
@@ -181,4 +188,95 @@ export async function validateRedirectUrl(url: string, originalUrl: string, mode
   } catch (error) {
     return false;
   }
+}
+
+/**
+ * Setup Playwright page-level SSRF protection
+ * 
+ * Intercepts all navigation and requests to block:
+ * - JavaScript-triggered navigation
+ * - Redirects to blocked URLs
+ * - Iframe navigation
+ * - Subresource requests to private networks
+ * 
+ * WARNING: This provides defense-in-depth but is not 100% foolproof.
+ * For maximum security, run Playwright in a sandboxed environment
+ * with network-level restrictions.
+ */
+export async function setupPlaywrightSSRFProtection(
+  page: Page,
+  allowedOrigin: string,
+  mode: 'local' | 'production'
+): Promise<void> {
+  const allowedHostname = parseUrl(allowedOrigin).hostname;
+  
+  // Intercept all requests
+  await page.route('**/*', async (route: Route) => {
+    const request = route.request();
+    const url = request.url();
+    
+    try {
+      // Parse URL
+      const parsed = parseUrl(url);
+      const hostname = parsed.hostname;
+      
+      if (!hostname) {
+        console.warn(`[SSRF] Blocked request with no hostname: ${url}`);
+        return route.abort('failed');
+      }
+      
+      // In production, enforce same-origin for navigation
+      if (mode === 'production' && request.isNavigationRequest()) {
+        if (hostname !== allowedHostname) {
+          console.warn(`[SSRF] Blocked cross-origin navigation: ${url}`);
+          return route.abort('blockedbyclient');
+        }
+      }
+      
+      // Check all requests against SSRF rules
+      const validation = await validateUrl(url, mode);
+      if (!validation.valid) {
+        console.warn(`[SSRF] Blocked request: ${url} - ${validation.error}`);
+        return route.abort('blockedbyclient');
+      }
+      
+      // Allow the request
+      route.continue();
+      
+    } catch (error) {
+      console.warn(`[SSRF] Error validating request ${url}:`, error);
+      route.abort('failed');
+    }
+  });
+  
+  // Monitor console for suspicious activity
+  page.on('console', (msg) => {
+    const text = msg.text();
+    if (text.includes('Failed to load') || text.includes('blocked')) {
+      console.log(`[SSRF] Console message: ${text}`);
+    }
+  });
+}
+
+/**
+ * Get network isolation recommendations for deployment
+ */
+export function getNetworkIsolationRecommendations(): string[] {
+  return [
+    'CRITICAL: Run Playwright browser processes in isolated containers/VMs',
+    'Configure firewall rules to block outbound connections to:',
+    '  - 10.0.0.0/8 (private class A)',
+    '  - 172.16.0.0/12 (private class B)',
+    '  - 192.168.0.0/16 (private class C)',
+    '  - 127.0.0.0/8 (loopback)',
+    '  - 169.254.0.0/16 (link-local)',
+    '  - 169.254.169.254/32 (cloud metadata)',
+    '  - ::1/128 (IPv6 loopback)',
+    '  - fe80::/10 (IPv6 link-local)',
+    '  - fc00::/7 (IPv6 private)',
+    'Consider using AWS Lambda or similar sandboxed environments',
+    'Implement egress proxy for additional logging and control',
+    'Monitor for DNS rebinding attacks',
+    'Set short DNS TTLs and re-validate IPs before requests'
+  ];
 }
