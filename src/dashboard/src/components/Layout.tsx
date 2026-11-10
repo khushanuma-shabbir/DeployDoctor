@@ -17,6 +17,9 @@ function Layout() {
             <NavLink to="/scan" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
               New Scan
             </NavLink>
+            <NavLink to="/qa-agent" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+              QA Agent
+            </NavLink>
             <NavLink to="/history" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
               History
             </NavLink>

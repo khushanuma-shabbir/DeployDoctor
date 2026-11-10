@@ -1,0 +1,55 @@
+services:
+  - type: web
+    name: deploydoctor
+    env: docker
+    region: oregon # Change to your preferred region
+    plan: starter # or standard for better performance
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    
+    # Environment variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      
+      - key: DATABASE_PATH
+        value: /var/data/deploydoctor.db
+      
+      - key: REPORTS_DIR
+        value: /var/data/reports
+      
+      - key: MAX_CONCURRENT_QA_SESSIONS
+        value: 1
+      
+      - key: QA_SESSION_TIMEOUT_MS
+        value: 1800000
+      
+      # IMPORTANT: Set these in Render dashboard (don't commit secrets!)
+      - key: API_KEY
+        sync: false # Set manually in Render dashboard
+      
+      - key: FRONTEND_ORIGIN
+        sync: false # Set manually in Render dashboard
+    
+    # Persistent disk for database and reports
+    disk:
+      name: deploydoctor-data
+      mountPath: /var/data
+      sizeGB: 1 # Adjust as needed
+    
+    # Health check
+    healthCheckPath: /health
+    
+    # Auto-deploy from main branch
+    autoDeploy: true
+    
+    # Build command (handled by Dockerfile)
+    # dockerCommand is not needed when using Dockerfile CMD
+
+# Optional: Database backup service
+# - type: cron
+#   name: deploydoctor-backup
+#   env: docker
+#   schedule: "0 2 * * *" # Daily at 2 AM
+#   dockerfilePath: ./Dockerfile
+#   dockerCommand: "node scripts/backup-db.js"

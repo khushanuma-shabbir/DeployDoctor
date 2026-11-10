@@ -1,6 +1,25 @@
 // API client for DeployDoctor backend
 
-const API_BASE = '/api';
+// Use environment variable for API base URL (configured in Vite)
+const API_BASE = import.meta.env.VITE_API_BASE_URL 
+  ? `${import.meta.env.VITE_API_BASE_URL}/api`
+  : '/api';
+
+// Get API key from environment (only for authenticated requests in production)
+const API_KEY = import.meta.env.VITE_API_KEY || '';
+
+// Helper to add auth header if needed
+function getHeaders(): HeadersInit {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json'
+  };
+  
+  if (API_KEY) {
+    headers['Authorization'] = `Bearer ${API_KEY}`;
+  }
+  
+  return headers;
+}
 
 export interface ScanRequest {
   url: string;
@@ -52,7 +71,7 @@ export const api = {
   async startScan(request: ScanRequest): Promise<ScanResult> {
     const response = await fetch(`${API_BASE}/scan`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify(request)
     });
     
@@ -66,7 +85,9 @@ export const api = {
   
   async getScans(limit?: number): Promise<ScanSummary[]> {
     const url = limit ? `${API_BASE}/scans?limit=${limit}` : `${API_BASE}/scans`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: getHeaders()
+    });
     
     if (!response.ok) {
       throw new Error('Failed to fetch scans');
@@ -76,7 +97,9 @@ export const api = {
   },
   
   async getScan(id: string): Promise<ScanResult> {
-    const response = await fetch(`${API_BASE}/scans/${id}`);
+    const response = await fetch(`${API_BASE}/scans/${id}`, {
+      headers: getHeaders()
+    });
     
     if (!response.ok) {
       const error = await response.json();
@@ -88,7 +111,8 @@ export const api = {
   
   async deleteScan(id: string): Promise<void> {
     const response = await fetch(`${API_BASE}/scans/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: getHeaders()
     });
     
     if (!response.ok) {
@@ -97,7 +121,9 @@ export const api = {
   },
   
   async getStats(): Promise<Stats> {
-    const response = await fetch(`${API_BASE}/stats`);
+    const response = await fetch(`${API_BASE}/stats`, {
+      headers: getHeaders()
+    });
     
     if (!response.ok) {
       throw new Error('Failed to fetch stats');
@@ -107,6 +133,7 @@ export const api = {
   },
   
   async health(): Promise<{ status: string; version: string }> {
+    // Health check doesn't need auth
     const response = await fetch(`${API_BASE}/health`);
     return response.json();
   }
