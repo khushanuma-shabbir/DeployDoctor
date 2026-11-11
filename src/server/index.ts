@@ -1,8 +1,10 @@
 import express from 'express';
 import session from 'express-session';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import connectSqlite3 from 'connect-sqlite3';
 import { body, validationResult } from 'express-validator';
 import { Scanner } from '../scanner/scanner.js';
 import { QAManager } from '../qa-agent/qa-manager.js';
@@ -82,15 +84,22 @@ app.use(cors({
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
+// Cookie parser (required for CSRF protection)
+app.use(cookieParser());
+
 // Session configuration
 const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-secret-change-in-production';
+const SESSION_DB_PATH = process.env.SESSION_DB_PATH || path.join(process.cwd(), 'sessions.db');
 
-if (IS_PRODUCTION && SESSION_SECRET === 'dev-secret-change-in-production') {
-  console.error('CRITICAL SECURITY ERROR: SESSION_SECRET not set in production!');
-  process.exit(1);
-}
+// Create persistent session store
+const SQLiteStore = connectSqlite3(session);
 
 app.use(session({
+  store: new SQLiteStore({
+    db: path.basename(SESSION_DB_PATH),
+    dir: path.dirname(SESSION_DB_PATH),
+    table: 'sessions'
+  }) as any, // Type workaround for connect-sqlite3
   secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
